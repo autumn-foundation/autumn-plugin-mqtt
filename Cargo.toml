@@ -1,0 +1,46 @@
+[package]
+name = "autumn-plugin-mqtt"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Autumn plugin: an MQTT v5 client — publish, subscribe, and route messages into background handlers."
+license = "Apache-2.0"
+repository = "https://github.com/madmax983/autumn-plugin-mqtt"
+keywords = ["autumn", "mqtt", "iot", "messaging", "plugin"]
+categories = ["web-programming", "network-programming"]
+exclude = [".github/", "docs/", "CLAUDE.md", "clippy.toml", "proptest-regressions/"]
+
+[dependencies]
+# No default features: the host app selects the Autumn features.
+autumn-web = { version = ">=0.7, <0.8", default-features = false }
+axum = { version = "0.8", default-features = false }
+http = "1"
+rumqttc = { version = "0.25", default-features = false, features = ["use-rustls"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "sync", "time"] }
+toml = "1.1"
+tracing = "0.1"
+
+[dev-dependencies]
+proptest = "1"
+tracing-subscriber = "0.3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "test-util"] }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+module_name_repetitions = "allow"
+redundant_pub_crate = "allow"

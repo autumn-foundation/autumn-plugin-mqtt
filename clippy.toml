@@ -1,0 +1,7 @@
+# Clippy configuration for autumn-plugin-mqtt.
+#
+# The unwrap/expect/panic/todo/unimplemented bans live in Cargo.toml
+# `[lints.clippy]` (deny). This file only pins the MSRV so Clippy never
+# suggests language features newer than the crate's rust-version.
+
+msrv = "1.88"

@@ -1,0 +1,6 @@
+/target
+*.orig
+*.rej
+.DS_Store
+.idea/
+.vscode/
