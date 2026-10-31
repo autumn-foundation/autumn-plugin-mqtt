@@ -23,18 +23,20 @@ async fn main() {
 
     let filter = env::args().nth(1).unwrap_or_else(|| "sensors/#".to_owned());
 
-    autumn_web::app()
-        .plugin(
-            MqttPlugin::new()
-                .configure(|c| {
-                    c.broker_url = String::from("mqtt://localhost:1883");
-                    c.client_id = String::from("autumn-example-subscriber");
-                })
-                .on_message(filter, Qos::AtLeastOnce, |message| async move {
-                    let payload = message.payload_str().unwrap_or("<binary>");
-                    println!("{} [{:?}]: {payload}", message.topic, message.qos);
-                }),
-        )
-        .run()
-        .await;
+    Box::pin(
+        autumn_web::app()
+            .plugin(
+                MqttPlugin::new()
+                    .configure(|c| {
+                        c.broker_url = String::from("mqtt://localhost:1883");
+                        c.client_id = String::from("autumn-example-subscriber");
+                    })
+                    .on_message(filter, Qos::AtLeastOnce, |message| async move {
+                        let payload = message.payload_str().unwrap_or("<binary>");
+                        println!("{} [{:?}]: {payload}", message.topic, message.qos);
+                    }),
+            )
+            .run(),
+    )
+    .await;
 }
