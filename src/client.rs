@@ -417,6 +417,9 @@ impl MqttClient {
     /// Polls the event loop forever. Spawn this once per client.
     ///
     /// Stops when `shutdown` fires or the request channel closes.
+    // `tokio::select!` expands to nested branches. Clippy 1.88 counts them
+    // in the cognitive complexity score.
+    #[allow(clippy::cognitive_complexity)]
     pub(crate) async fn run(self, mut eventloop: EventLoop, shutdown: Arc<Notify>) {
         self.resubscribe().await;
         let mut backoff = Backoff::new(self.inner.reconnect_initial, self.inner.reconnect_max);
@@ -519,13 +522,14 @@ impl MqttClient {
 impl axum::extract::FromRequestParts<AppState> for MqttClient {
     type Rejection = AutumnError;
 
-    // The trait needs `async`; the body has nothing to await.
-    #[allow(clippy::unused_async_trait_impl)]
-    async fn from_request_parts(
+    // The body has nothing to await, so it returns a ready future.
+    fn from_request_parts(
         _parts: &mut http::request::Parts,
         state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        Self::from_state(state).ok_or_else(|| MqttError::NotInstalled.into_autumn())
+    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
+        std::future::ready(
+            Self::from_state(state).ok_or_else(|| MqttError::NotInstalled.into_autumn()),
+        )
     }
 }
 

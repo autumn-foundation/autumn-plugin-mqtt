@@ -169,3 +169,15 @@ async fn subscribe_rejects_a_bad_filter() {
         "an InvalidFilter, not {err:?}"
     );
 }
+
+#[tokio::test]
+async fn extractor_rejects_with_503_when_the_plugin_is_not_installed() {
+    use axum::extract::FromRequestParts as _;
+
+    let state = autumn_web::AppState::detached();
+    let (mut parts, ()) = http::Request::new(()).into_parts();
+    let Err(err) = MqttClient::from_request_parts(&mut parts, &state).await else {
+        panic!("no client is installed, so the extractor must reject");
+    };
+    assert_eq!(err.status(), http::StatusCode::SERVICE_UNAVAILABLE);
+}
