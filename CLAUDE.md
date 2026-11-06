@@ -22,7 +22,7 @@ exposes a health indicator plus Prometheus metrics.
 
 ## Rules
 
-- Rust edition 2024, `rust-version = "1.88"`, Apache-2.0.
+- Rust edition 2024, `rust-version = "1.97"`, Apache-2.0.
 - Production code: no `unwrap`/`expect`/`panic`/`todo!`/`unimplemented!`,
   no `unsafe`. Tests may use `unwrap`/`expect`.
 - Secrets never reach logs or error text (no passwords, payloads, cert
