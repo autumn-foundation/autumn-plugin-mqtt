@@ -62,3 +62,8 @@ pub use client::{ConnectionState, MessageHandler, MqttClient, MqttMessage, topic
 pub use config::{ConfigError, DEFAULT_SECTION, MqttConfig, Qos};
 pub use error::{ErrorKind, MqttError};
 pub use plugin::{MqttPlugin, PLUGIN_NAME};
+
+/// Compiles the Rust snippets of the README as doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+pub struct ReadmeDoctests;

@@ -9,7 +9,7 @@ and watch the broker on `/health` and Prometheus metrics.
 
 Add the plugin:
 
-```rust
+```rust,no_run
 use autumn_plugin_mqtt::{MqttClient, MqttPlugin, Qos};
 use autumn_web::prelude::*;
 
@@ -22,11 +22,14 @@ async fn telemetry(client: MqttClient, Path(device): Path<String>) -> AutumnResu
     Ok("sent".to_owned())
 }
 
-autumn_web::app()
-    .plugin(MqttPlugin::new())
-    .routes(routes![telemetry])
-    .run()
-    .await;
+#[autumn_web::main]
+async fn main() {
+    autumn_web::app()
+        .plugin(MqttPlugin::new())
+        .routes(routes![telemetry])
+        .run()
+        .await;
+}
 ```
 
 Configure `[mqtt]` in `autumn.toml`:
@@ -47,10 +50,14 @@ Register a handler per topic filter. Each incoming message spawns one
 background task per matching handler:
 
 ```rust
-MqttPlugin::new().on_message("sensors/#", Qos::AtLeastOnce, |message| async move {
-    let payload = message.payload_str().unwrap_or("<binary>");
-    println!("{}: {payload}", message.topic);
-})
+use autumn_plugin_mqtt::{MqttPlugin, Qos};
+
+fn plugin() -> MqttPlugin {
+    MqttPlugin::new().on_message("sensors/#", Qos::AtLeastOnce, |message| async move {
+        let payload = message.payload_str().unwrap_or("<binary>");
+        println!("{}: {payload}", message.topic);
+    })
+}
 ```
 
 A handler can enqueue an Autumn `#[job]` from inside to run durable
@@ -61,7 +68,12 @@ queue.
 Dynamic subscriptions are also possible at runtime:
 
 ```rust
-client.subscribe("devices/+/status", Qos::AtLeastOnce).await?;
+use autumn_plugin_mqtt::{MqttClient, MqttError, Qos};
+
+async fn watch_status(client: &MqttClient) -> Result<(), MqttError> {
+    client.subscribe("devices/+/status", Qos::AtLeastOnce).await?;
+    Ok(())
+}
 ```
 
 ## TLS

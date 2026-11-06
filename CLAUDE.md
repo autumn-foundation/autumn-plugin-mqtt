@@ -22,6 +22,8 @@ exposes a health indicator plus Prometheus metrics.
 
 ## Rules
 
+- README Rust snippets are doctests. Make them compile; use `no_run`, not `ignore`.
+  `tests/doc_snippets.rs` checks the TOML snippets and the version pins in the docs.
 - Rust edition 2024, `rust-version = "1.97"`, Apache-2.0.
 - Production code: no `unwrap`/`expect`/`panic`/`todo!`/`unimplemented!`,
   no `unsafe`. Tests may use `unwrap`/`expect`.
