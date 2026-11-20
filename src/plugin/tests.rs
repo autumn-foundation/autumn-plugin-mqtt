@@ -74,3 +74,38 @@ fn debug_names_the_section() {
     let debug = format!("{plugin:?}");
     assert!(debug.contains("changes"), "{debug}");
 }
+
+/// The role of a config with `lines`.
+fn role(lines: &str) -> autumn_web::Role {
+    let config: autumn_web::config::AutumnConfig = toml::from_str(lines).expect("config parses");
+    config.resolve_role().expect("role resolves")
+}
+
+#[test]
+fn only_a_subscriber_role_subscribes() {
+    use super::{MQTT_SUBSCRIBER, subscriptions_for};
+    assert_eq!(MQTT_SUBSCRIBER.name(), "mqtt.subscriber");
+    assert_eq!(MQTT_SUBSCRIBER.parent(), autumn_web::Capability::JobWorkers);
+    let subscriptions = || {
+        let plugin = MqttPlugin::new()
+            .config(test_config())
+            .subscribe("sensors/#", Qos::AtLeastOnce);
+        prepare(&plugin.source, plugin.changes, plugin.subscriptions)
+            .expect("prepares")
+            .1
+    };
+    let off = "role = \"cron\"\n[roles.cron]\nbase = \"worker\"\n\
+               capabilities = { \"mqtt.subscriber\" = false }\n";
+    for (lines, expected) in [
+        ("role = \"combined\"", 1),
+        ("role = \"worker\"", 1),
+        ("role = \"web\"", 0),
+        (off, 0),
+    ] {
+        assert_eq!(
+            subscriptions_for(&role(lines), subscriptions()).len(),
+            expected,
+            "{lines}"
+        );
+    }
+}

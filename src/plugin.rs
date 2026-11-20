@@ -16,8 +16,9 @@ use std::sync::{Arc, OnceLock};
 
 use autumn_web::actuator::{MetricFamily, MetricsSource};
 use autumn_web::app::AppBuilder;
+use autumn_web::background::PluginCapability;
 use autumn_web::plugin::Plugin;
-use autumn_web::{AppState, AutumnError};
+use autumn_web::{AppState, AutumnError, Capability, Role};
 use tokio::sync::Notify;
 
 use crate::client::{MessageHandler, MqttClient, MqttMessage, Subscription};
@@ -27,6 +28,30 @@ use crate::health::MqttHealthIndicator;
 
 /// The plugin name in Autumn diagnostics.
 pub const PLUGIN_NAME: &str = "autumn-plugin-mqtt";
+
+/// The capability of the subscription handlers.
+///
+/// A role runs it when it runs
+/// job workers (`combined`, `worker`). A named role can turn it off:
+/// `[roles.<name>] capabilities = { "mqtt.subscriber" = false }`.
+///
+/// Every role connects and can publish. Only a role that runs this
+/// capability subscribes and runs the handlers.
+pub const MQTT_SUBSCRIBER: PluginCapability =
+    PluginCapability::new("mqtt.subscriber", Capability::JobWorkers);
+
+/// The subscriptions that `role` makes: all of them when the role runs
+/// [`MQTT_SUBSCRIBER`], else none.
+pub(crate) fn subscriptions_for(
+    role: &Role,
+    subscriptions: Vec<Subscription>,
+) -> Vec<Subscription> {
+    if role.runs_plugin(MQTT_SUBSCRIBER) {
+        subscriptions
+    } else {
+        Vec::new()
+    }
+}
 
 /// State that the plugin hooks share.
 #[derive(Default)]
@@ -205,7 +230,9 @@ impl Plugin for MqttPlugin {
         let prepared = Arc::new(prepare(&source, changes, subscriptions));
         let shared = Arc::new(Shared::default());
         let shutdown = Arc::new(Notify::new());
-        app = app.metrics_source("mqtt", Arc::new(Source(Arc::clone(&shared))));
+        app = app
+            .plugin_capability(MQTT_SUBSCRIBER)
+            .metrics_source("mqtt", Arc::new(Source(Arc::clone(&shared))));
         let health_check = prepared
             .as_ref()
             .as_ref()
@@ -225,6 +252,7 @@ impl Plugin for MqttPlugin {
             async move {
                 let (config, subscriptions) =
                     prepared.as_ref().clone().map_err(|err| boot_error(&err))?;
+                let subscriptions = subscriptions_for(state.role(), subscriptions);
                 let (client, eventloop) =
                     MqttClient::open(&config, subscriptions).map_err(|err| boot_error(&err))?;
                 client

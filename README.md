@@ -102,6 +102,20 @@ A last will uses flat keys under `[mqtt]` — `will_topic`, `will_payload`,
   `mqtt_connection_errors_total`, `mqtt_connected`, each labeled with
   `client_id` and broker `host`.
 
+## Roles
+
+Every role connects to the broker and can publish. Only a role that runs the
+`mqtt.subscriber` capability makes the subscriptions of `subscribe` and
+`on_message`, and runs their handlers. Its parent is `job_workers`, so
+`combined` and `worker` subscribe, and `web` does not. A named role can turn
+it off:
+
+```toml
+[roles.cron]
+base = "worker"
+capabilities = { "mqtt.subscriber" = false }
+```
+
 ## Known issues
 
 - The plugin boots even when the broker is down; the supervisor reconnects

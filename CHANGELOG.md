@@ -8,8 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Support `autumn-web` 0.10. The plugin now needs `autumn-web` 0.10 and
+- Support `autumn-web` 0.11. The plugin now needs `autumn-web` 0.11 and
   Rust 1.97.
+- The subscriptions follow the process role. A role that does not run the
+  `mqtt.subscriber` capability (parent `job_workers`) connects and
+  publishes, but does not subscribe. So a `web` replica no longer runs the
+  message handlers.
 
 ## [0.1.0] - 2026-09-29
 
