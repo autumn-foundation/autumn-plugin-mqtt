@@ -61,7 +61,7 @@ mod plugin;
 pub use client::{ConnectionState, MessageHandler, MqttClient, MqttMessage, topic_matches};
 pub use config::{ConfigError, DEFAULT_SECTION, MqttConfig, Qos};
 pub use error::{ErrorKind, MqttError};
-pub use plugin::{MqttPlugin, PLUGIN_NAME};
+pub use plugin::{MQTT_SUBSCRIBER, MqttPlugin, PLUGIN_NAME};
 
 /// Compiles the Rust snippets of the README as doctests.
 #[cfg(doctest)]
